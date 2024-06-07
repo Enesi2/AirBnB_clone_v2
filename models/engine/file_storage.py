@@ -1,5 +1,4 @@
-#!/usr/bin/python3
-"""This is the file storage class for AirBnB"""
+s is the file storage class for AirBnB"""
 import json
 from models.base_model import BaseModel
 from models.user import User
@@ -15,32 +14,29 @@ class FileStorage:
     deserializes JSON file to instances
     Attributes:
         __file_path: path to the JSON file
-        __objects: objects will be stored
+        __objects: objects will be stored with key clsname.objectID
     """
     __file_path = "file.json"
     __objects = {}
-    all_classes = {'BaseModel': BaseModel, 'User': User,
-                   'State': State, 'City': City, 'Amenity': Amenity,
-                   'Place': Place, 'Review': Review}
+    __clsdict = {
+        "User": User,
+        "State": State,
+        "City": City,
+        "Amenity": Amenity,
+        "Place": Place,
+        "Review": Review
+    }
 
     def all(self, cls=None):
         """returns a dictionary
         Return:
             returns a dictionary of __object
         """
-        all_return = {}
-
-        # if cls is valid
+        cls = cls if not isinstance(cls, str) else self.__clsdict.get(cls)
         if cls:
-            if cls.__name__ in self.all_classes:
-                # copy objects of cls to temp dict
-                for key, val in self.__objects.items():
-                    if key.split('.')[0] == cls.__name__:
-                        all_return.update({key: val})
-        else:  # if cls is none
-            all_return = self.__objects
-
-        return all_return
+            return {k: v for k, v in self.__objects.items()
+                    if isinstance(v, cls)}
+        return self.__objects
 
     def new(self, obj):
         """sets __object to given obj
@@ -71,15 +67,21 @@ class FileStorage:
         except FileNotFoundError:
             pass
 
-    def close(self):
-        """Reload JSON objects
-        """
-        return self.reload()
-
     def delete(self, obj=None):
-        """delete obj from __objects if present
+        """delete an object from __objects if the given object exists
+        Args:
+            obj: given object
+        Exceptions:
+            KeyError: when object doesn't exist
         """
         if obj:
-            # format key from obj
             key = "{}.{}".format(type(obj).__name__, obj.id)
-            del self.__objects[key]
+            try:
+                del self.__objects[key]
+            except KeyError:
+                pass
+
+    def close(self):
+        """deserializing the JSON file to objects
+        """
+        self.reload()
